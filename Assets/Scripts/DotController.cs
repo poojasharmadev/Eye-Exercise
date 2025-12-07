@@ -3,60 +3,114 @@ using UnityEngine.UI;
 
 public class DotController : MonoBehaviour
 {
-    public float moveSpeed = 150f;
     public Image dotImage;
-    public RectTransform moveArea;
+    public GameObject donePanel;
+    public float moveSpeed = 200f;
+    public float shrinkAmount = 40f;
 
-    private RectTransform rect;
-    private Vector2 targetPos;
+    public DonePanelController donePanelController;
+
+    private Vector2 topLeft, topRight, bottomRight, bottomLeft;
+    private Vector2 currentTarget;
+    private int state = 0;           // Tracks which corner to move to
+    private int loopCount = 0;       // Counts completed loops
+    private bool done = false;
 
     public bool isRed = false;
 
-    private float minTravelTime = 1f;   // <--- must travel at least 1 second
-    private float travelTimer = 0f;
+    public float maxLoops = 6.5f;         // Number of loops before donePanel shows
 
     void Start()
     {
-        rect = GetComponent<RectTransform>();
-        ChooseNewTarget();
+        InitCorners();
+        currentTarget = topLeft;
+
         InvokeRepeating(nameof(ChangeColor), 1f, 1.2f);
     }
 
     void Update()
     {
-        travelTimer += Time.deltaTime;
+        if (done) return;
 
-        rect.anchoredPosition = Vector2.MoveTowards(rect.anchoredPosition, targetPos, moveSpeed * Time.deltaTime);
+        // Move dot toward current target
+        RectTransform rect = transform.GetComponent<RectTransform>();
+        rect.anchoredPosition = Vector2.MoveTowards(rect.anchoredPosition, currentTarget, moveSpeed * Time.deltaTime);
 
-        // only choose new target AFTER it has moved for 1 sec
-        if (travelTimer >= minTravelTime &&
-            Vector2.Distance(rect.anchoredPosition, targetPos) < 10f)
+        // Check if reached the corner
+        if (Vector2.Distance(rect.anchoredPosition, currentTarget) < 1f)
         {
-            ChooseNewTarget();
-            travelTimer = 0f;
+            NextCorner();
         }
     }
 
-    void ChooseNewTarget()
+    void InitCorners()
     {
-        Vector2 areaSize = moveArea.rect.size;
+        RectTransform parentRect = transform.parent.GetComponent<RectTransform>();
+        Vector2 size = parentRect.rect.size;
+        float halfX = size.x / 2;
+        float halfY = size.y / 2;
 
-        float limitX = (areaSize.x / 2) - 40;
-        float limitY = (areaSize.y / 2) - 40;
-
-        targetPos = new Vector2(
-            Random.Range(-limitX, limitX),
-            Random.Range(-limitY, limitY)
-        );
+        topLeft = new Vector2(-halfX + 20, halfY - 20);
+        topRight = new Vector2(halfX - 20, halfY - 20);
+        bottomRight = new Vector2(halfX - 20, -halfY + 20);
+        bottomLeft = new Vector2(-halfX + 20, -halfY + 20);
     }
+
+    void NextCorner()
+    {
+        state++;
+        switch (state)
+        {
+            case 1: currentTarget = topRight; break;
+            case 2: currentTarget = bottomRight; break;
+            case 3: currentTarget = bottomLeft; break;
+            case 4:
+                currentTarget = topLeft;
+                state = 0;
+
+                loopCount++;  // Completed one loop
+
+                // Shrink the square a little after each loop
+                ShrinkSquare();
+
+                // Check if reached max loops
+                if (loopCount >= maxLoops)
+                {
+                    done = true;
+                    ShowDonePanel();
+                }
+                break;
+        }
+    }
+
+    void ShrinkSquare()
+    {
+        topLeft += new Vector2(shrinkAmount, -shrinkAmount);
+        topRight += new Vector2(-shrinkAmount, -shrinkAmount);
+        bottomRight += new Vector2(-shrinkAmount, shrinkAmount);
+        bottomLeft += new Vector2(shrinkAmount, shrinkAmount);
+    }
+
+     void ShowDonePanel()
+    {
+        if (donePanel != null)
+        {
+            donePanel.SetActive(true);  // Activate panel
+            DonePanelController controller = donePanel.GetComponent<DonePanelController>();
+            if (controller != null)
+                controller.ShowPanel();  // Animate scale in
+        }
+    }
+
 
     void ChangeColor()
     {
-        int random = Random.Range(0, 4);
+        if (done) return;
 
+        int random = Random.Range(0, 3);
         if (random == 0)
         {
-            dotImage.color = Color.red;
+            dotImage.color = Color.yellow;
             isRed = true;
         }
         else

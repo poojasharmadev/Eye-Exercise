@@ -3,23 +3,34 @@ using TMPro;
 
 public class FocusTracker : MonoBehaviour
 {
-    public DotController dot;
-    public TextMeshProUGUI scoreText;
+    public DotController dot;           // Reference to the moving dot
+    public TextMeshProUGUI scoreText;   // UI text to display score
 
     private int score = 0;
 
-    // Button calls this
+    void Start()
+    {
+        UpdateScoreUI(); // Show initial score
+    }
+
+    // Call this from a UI button when player taps
     public void CheckTap()
     {
-        if (dot.isRed)
+        if (dot.isRed)   // Dot is yellow
         {
             score++;
         }
-        else
+        else            // Dot is white
         {
             score--;
         }
 
+        UpdateScoreUI();
+    }
+
+    // Updates the score text
+    private void UpdateScoreUI()
+    {
         scoreText.text = "Score: " + score;
     }
 }
