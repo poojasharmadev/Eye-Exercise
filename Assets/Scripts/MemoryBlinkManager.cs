@@ -20,14 +20,14 @@ public class MemoryBlinkDynamic : MonoBehaviour
     public GameObject selectionButtonPrefab;
 
     [Header("Result Prefabs")]
-    public GameObject correctPrefab; 
-    public GameObject wrongPrefab;   
+    public GameObject correctPrefab;
+    public GameObject wrongPrefab;
 
     [Header("Win/Lose Panels")]
     public GameObject winPanel;
     public GameObject losePanel;
 
-    private List<Sprite> memoryShapes = new List<Sprite>(); 
+    private List<Sprite> memoryShapes = new List<Sprite>();
     private int guessCount = 0;
     private int correctCount = 0;
 
@@ -137,55 +137,41 @@ public class MemoryBlinkDynamic : MonoBehaviour
     // -------------------------------
     // BUTTON CLICK LOGIC
     // -------------------------------
+    // -------------------------------
+    // BUTTON CLICK LOGIC
+    // -------------------------------
     void OnSelectShape(Sprite clickedSprite, GameObject clickedButton)
-{
-    // Hide memory shapes immediately
-    foreach (Transform child in shapeParent)
-        child.gameObject.SetActive(false);
-
-    bool isCorrect = memoryShapes.Any(s => s.name == clickedSprite.name);
-
-    // Dim clicked button
-    Image btnImage = clickedButton.GetComponent<Image>();
-    if (btnImage != null)
-        btnImage.color = new Color(1f, 1f, 1f, 0.5f);
-
-    // Instantiate correct/incorrect prefab as child of clicked button
-    GameObject panelPrefab = isCorrect ? correctPrefab : wrongPrefab;
-    GameObject panel = Instantiate(panelPrefab, clickedButton.transform); // Set parent to clicked button
-    panel.transform.localPosition = new Vector3(0, 50, 0); // Position relative to button
-    panel.SetActive(true);
-
-    StartCoroutine(FadePanel(panel));
-
-    // Update guesses
-    guessCount++;
-    if (isCorrect) correctCount++;
-
-    // Show win/lose panel after 3 guesses
-    if (guessCount >= 3)
     {
-        if (correctCount >= 2)
-            winPanel.SetActive(true);
-        else
-            losePanel.SetActive(true);
+        // Make clicked button unclickable
+        Button btnComp = clickedButton.GetComponent<Button>();
+        if (btnComp != null)
+            btnComp.interactable = false;
 
-        // Dim all remaining buttons
-        foreach (Transform btn in selectionParent)
-        {
-            Image img = btn.GetComponent<Image>();
-            if (img != null)
-                img.color = new Color(1f, 1f, 1f, 0.5f);
-        }
+        bool isCorrect = memoryShapes.Any(s => s.name == clickedSprite.name);
+
+        // Dim clicked button
+        Image btnImage = clickedButton.GetComponent<Image>();
+        if (btnImage != null)
+            btnImage.color = new Color(1f, 1f, 1f, 0.5f);
+
+        // Instantiate correct/incorrect prefab
+        GameObject panelPrefab = isCorrect ? correctPrefab : wrongPrefab;
+        GameObject panel = Instantiate(panelPrefab, clickedButton.transform); // Set parent to clicked button
+        panel.transform.localPosition = new Vector3(0, 50, 0); // Position relative to button
+        panel.SetActive(true);
+
+        // Update guesses
+        guessCount++;
+        if (isCorrect) correctCount++;
+
+        // Start fade panel coroutine and pass if this is the last guess
+        StartCoroutine(FadePanel(panel, guessCount >= 3));
     }
-}
-
-
 
     // -------------------------------
     // FADE PANEL
     // -------------------------------
-    IEnumerator FadePanel(GameObject panel)
+    IEnumerator FadePanel(GameObject panel, bool isLastGuess)
     {
         CanvasGroup cg = panel.GetComponent<CanvasGroup>();
         if (cg == null) cg = panel.AddComponent<CanvasGroup>();
@@ -214,6 +200,27 @@ public class MemoryBlinkDynamic : MonoBehaviour
             cg.alpha = Mathf.Lerp(1f, 0f, t / duration);
             yield return null;
         }
+
         Destroy(panel);
+
+        // Show win/lose panel only if this was the last guess
+        if (isLastGuess)
+        {
+            if (correctCount >= 2)
+                winPanel.SetActive(true);
+            else
+                losePanel.SetActive(true);
+
+            // Dim all remaining buttons
+            foreach (Transform btn in selectionParent)
+            {
+                Button b = btn.GetComponent<Button>();
+                if (b != null) b.interactable = false;
+
+                Image img = btn.GetComponent<Image>();
+                if (img != null)
+                    img.color = new Color(1f, 1f, 1f, 0.5f);
+            }
+        }
     }
 }
