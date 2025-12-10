@@ -26,16 +26,39 @@ public class PanelSwitcher : MonoBehaviour
     public void ShowPanel(GameObject panel)
     {
         GameObject[] allPanels = {
-            mainMenu, modeSelection, instructions,
-            focusTracker, memoryBlink, spotChange,
-            dualFocus, colorVision, eyeSpeed, hiddenObject,
-            resultPanel
-        };
+        mainMenu, modeSelection, instructions,
+        focusTracker, memoryBlink, spotChange,
+        dualFocus, colorVision, eyeSpeed, hiddenObject,
+        resultPanel
+    };
 
-        foreach (var p in allPanels) p.SetActive(false);
+        foreach (var p in allPanels)
+            p.SetActive(false);
 
         panel.SetActive(true);
+
+        // Reset Memory Blink
+        if (panel == memoryBlink)
+        {
+            MemoryBlinkDynamic mb = memoryBlink.GetComponent<MemoryBlinkDynamic>();
+            if (mb != null)
+                mb.ResetGame();
+        }
+
+        // Reset Focus Tracker
+        else if (panel == focusTracker)
+        {
+            FocusTracker ft = focusTracker.GetComponent<FocusTracker>();
+            if (ft != null)
+                ft.ResetGame();
+        }
+       
     }
+
+
+
+
+
 
 
     public GameObject GetPanelByMode(string mode)

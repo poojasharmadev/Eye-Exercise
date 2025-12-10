@@ -2779,7 +2779,7 @@ MonoBehaviour:
   donePanel: {fileID: 654139164}
   moveSpeed: 1200
   shrinkAmount: 150
-  donePanelController: {fileID: 0}
+  donePanelController: {fileID: 654139168}
   isRed: 0
   maxLoops: 5
 --- !u!1 &619080086

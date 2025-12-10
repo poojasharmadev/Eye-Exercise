@@ -43,6 +43,37 @@ public class MemoryBlinkDynamic : MonoBehaviour
 
         StartCoroutine(StartMemoryPhase());
     }
+    public void ResetGame()
+{
+    // Load shapes again if needed
+    if (allShapeSprites == null || allShapeSprites.Count == 0)
+        allShapeSprites = shapeCollection.shapeSprites;
+
+    // Hide panels
+    winPanel.SetActive(false);
+    losePanel.SetActive(false);
+
+    // Reset counters
+    guessCount = 0;
+    correctCount = 0;
+
+    // Clear memory shapes
+    memoryShapes.Clear();
+
+    // Clear UI
+    foreach (Transform child in shapeParent)
+        Destroy(child.gameObject);
+
+    foreach (Transform child in selectionParent)
+        Destroy(child.gameObject);
+
+    StopAllCoroutines();
+
+    // Start a new game
+    StartCoroutine(StartMemoryPhase());
+}
+
+
 
     // -------------------------------
     // MEMORY PHASE

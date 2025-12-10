@@ -8,10 +8,21 @@ public class FocusTracker : MonoBehaviour
 
     private int score = 0;
 
+
     void Start()
     {
         UpdateScoreUI(); // Show initial score
     }
+
+public void ResetGame()
+{
+    score = 0;
+    UpdateScoreUI();
+
+    dot.ResetDot();
+}
+
+
 
     // Call this from a UI button when player taps
     public void CheckTap()

@@ -20,13 +20,17 @@ public class DotController : MonoBehaviour
 
     public float maxLoops = 6.5f;         // Number of loops before donePanel shows
 
-    void Start()
-    {
-        InitCorners();
-        currentTarget = topLeft;
+ void Start()
+{
+    // Save initial spawn position
+    startPosition = transform.GetComponent<RectTransform>().anchoredPosition;
 
-        InvokeRepeating(nameof(ChangeColor), 1f, 1.2f);
-    }
+    InitCorners();
+    currentTarget = topLeft;
+
+    InvokeRepeating(nameof(ChangeColor), 1f, 1.2f);
+}
+
 
     void Update()
     {
@@ -55,6 +59,36 @@ public class DotController : MonoBehaviour
         bottomRight = new Vector2(halfX - 20, -halfY + 20);
         bottomLeft = new Vector2(-halfX + 20, -halfY + 20);
     }
+
+   private Vector2 startPosition;
+
+public void ResetDot()
+{
+    // Reset all states
+    done = false;
+    loopCount = 0;
+    state = 0;
+    isRed = false;
+
+    // Reset dot color
+    dotImage.color = Color.white;
+
+    // Reset movement variables
+    transform.GetComponent<RectTransform>().anchoredPosition = startPosition;
+
+    // Recalculate the square corners
+    InitCorners();
+    currentTarget = topLeft;
+
+    // Restart color changing
+    CancelInvoke(nameof(ChangeColor));
+    InvokeRepeating(nameof(ChangeColor), 1f, 1.2f);
+
+    // Hide done panel
+    if (donePanel != null)
+        donePanel.SetActive(false);
+}
+
 
     void NextCorner()
     {
