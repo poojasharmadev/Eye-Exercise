@@ -47,18 +47,21 @@ public class DotController : MonoBehaviour
         }
     }
 
-    void InitCorners()
-    {
-        RectTransform parentRect = transform.parent.GetComponent<RectTransform>();
-        Vector2 size = parentRect.rect.size;
-        float halfX = size.x / 2;
-        float halfY = size.y / 2;
+   void InitCorners()
+{
+    RectTransform parentRect = transform.parent.GetComponent<RectTransform>();
+    Vector2 size = parentRect.rect.size;
+    float halfX = size.x / 2;
+    float halfY = size.y / 2;
 
-        topLeft = new Vector2(-halfX + 20, halfY - 20);
-        topRight = new Vector2(halfX - 20, halfY - 20);
-        bottomRight = new Vector2(halfX - 20, -halfY + 20);
-        bottomLeft = new Vector2(-halfX + 20, -halfY + 20);
-    }
+    float margin = 50f; // Increase this value to move further inside the screen
+
+    topLeft = new Vector2(-halfX + margin, halfY - margin);
+    topRight = new Vector2(halfX - margin, halfY - margin);
+    bottomRight = new Vector2(halfX - margin, -halfY + margin);
+    bottomLeft = new Vector2(-halfX + margin, -halfY + margin);
+}
+
 
    private Vector2 startPosition;
 
