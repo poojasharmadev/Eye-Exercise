@@ -3,39 +3,44 @@ using UnityEngine;
 public class MoveDot : MonoBehaviour
 {
     public float speed = 5f;
+
     private Vector2 direction;
+    private Vector3 startPosition;
 
     void Start()
     {
-        // Start moving in a random direction
-        direction = Random.insideUnitCircle.normalized;
+        startPosition = transform.position;
+        ResetDot();
     }
 
     void Update()
     {
-        // Move the dot
         transform.Translate(direction * speed * Time.deltaTime);
 
-        // Get camera bounds
-        Vector2 min = Camera.main.ViewportToWorldPoint(new Vector2(0, 0));
-        Vector2 max = Camera.main.ViewportToWorldPoint(new Vector2(1, 1));
+        Vector2 min = Camera.main.ViewportToWorldPoint(Vector2.zero);
+        Vector2 max = Camera.main.ViewportToWorldPoint(Vector2.one);
 
         Vector2 pos = transform.position;
 
-        // Check X boundaries
         if (pos.x < min.x || pos.x > max.x)
         {
-            direction.x = -direction.x; // bounce back
+            direction.x *= -1;
             pos.x = Mathf.Clamp(pos.x, min.x, max.x);
         }
 
-        // Check Y boundaries
         if (pos.y < min.y || pos.y > max.y)
         {
-            direction.y = -direction.y; // bounce back
+            direction.y *= -1;
             pos.y = Mathf.Clamp(pos.y, min.y, max.y);
         }
 
         transform.position = pos;
+    }
+
+    // 🔁 RESET DOT
+    public void ResetDot()
+    {
+        transform.position = startPosition;
+        direction = Random.insideUnitCircle.normalized;
     }
 }

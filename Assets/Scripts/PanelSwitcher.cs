@@ -52,7 +52,13 @@ public class PanelSwitcher : MonoBehaviour
             if (ft != null)
                 ft.ResetGame();
         }
-       
+
+        else if (panel == dualFocus)
+        {
+            DualFocusManager df = dualFocus.GetComponent<DualFocusManager>();
+            if (df != null)
+                df.ResetGame();
+       }
     }
 
 

@@ -5,112 +5,142 @@ using System.Collections;
 
 public class DualFocusManager : MonoBehaviour
 {
+    [Header("UI")]
     public RectTransform spawnArea;
-    public TMP_Text numberText;  // assign in inspector
-    public Image numberBox;      // the Image behind the number
-    public TMP_Text scoreText;   // assign in inspector
+    public TMP_Text numberText;
+    public Image numberBox;
+    public TMP_Text scoreText;
+
+    [Header("Settings")]
     public float spawnInterval = 2f;
+    public int winScore = 10;
 
-    private int score = 0;
-    private RectTransform canvasRect;
-
+    [Header("Complete Panel")]
     public GameObject completePanel;
     public float panelAnimDuration = 0.5f;
+
+    private int score;
     private CanvasGroup panelCanvasGroup;
+    private bool gameActive = false;
 
-    void Start()
+    // ------------------------
+    // UNITY LIFECYCLE
+    // ------------------------
+    void Awake()
     {
-        canvasRect = numberText.canvas.GetComponent<RectTransform>();
-        UpdateScoreUI();
-
-        // Make panel inactive initially
-        completePanel.SetActive(false);
         panelCanvasGroup = completePanel.GetComponent<CanvasGroup>();
         if (panelCanvasGroup == null)
-        {
             panelCanvasGroup = completePanel.AddComponent<CanvasGroup>();
-        }
-        panelCanvasGroup.alpha = 0f;
-        completePanel.transform.localScale = Vector3.zero;
+    }
 
-        // Start spawning numbers repeatedly
-        InvokeRepeating("SpawnNumber", 1f, spawnInterval);
+    void OnEnable()
+    {
+        ResetGame();
+        StartGame();
+    }
+
+    void OnDisable()
+    {
+        StopGame();
     }
 
     void Update()
     {
+        if (!gameActive) return;
+
         if (Input.GetMouseButtonDown(0))
         {
-            int currentNumber = int.Parse(numberText.text);
+            int num = int.Parse(numberText.text);
 
-            if (currentNumber % 2 == 0)
-                score++;
-            else
-                score--;
-
+            score += (num % 2 == 0) ? 1 : -1;
             UpdateScoreUI();
 
-            if (score >= 10) // show panel on score 10
+            if (score >= winScore)
             {
+                gameActive = false;
+                StopAllCoroutines();
+                CancelInvoke(nameof(SpawnNumber));
                 StartCoroutine(ShowCompletePanel());
             }
         }
     }
 
+    // ------------------------
+    // GAME FLOW
+    // ------------------------
+    void StartGame()
+    {
+        gameActive = true;
+        InvokeRepeating(nameof(SpawnNumber), 1f, spawnInterval);
+    }
 
+    void StopGame()
+    {
+        gameActive = false;
+        CancelInvoke(nameof(SpawnNumber));
+        StopAllCoroutines();
+    }
 
-void SpawnNumber()
-{
-    int randomNumber = Random.Range(0, 100);
-    numberText.text = randomNumber.ToString();
+    // ------------------------
+    // RESET
+    // ------------------------
+    public void ResetGame()
+    {
+        score = 0;
+        UpdateScoreUI();
 
-    // Get half of box size
-    float halfWidth = numberBox.rectTransform.rect.width / 2;
-    float halfHeight = numberBox.rectTransform.rect.height / 2;
+        numberText.text = "0";
+        numberBox.color = Color.white;
 
-    // Random position inside spawn area
-    float x = Random.Range(
-        spawnArea.rect.xMin + halfWidth,
-        spawnArea.rect.xMax - halfWidth
-    );
-    float y = Random.Range(
-        spawnArea.rect.yMin + halfHeight,
-        spawnArea.rect.yMax - halfHeight
-    );
+        completePanel.SetActive(false);
+        panelCanvasGroup.alpha = 0f;
+        completePanel.transform.localScale = Vector3.zero;
+    }
 
-    numberBox.rectTransform.anchoredPosition = new Vector2(x, y);
+    // ------------------------
+    // GAME LOGIC
+    // ------------------------
+    void SpawnNumber()
+    {
+        int randomNumber = Random.Range(0, 100);
+        numberText.text = randomNumber.ToString();
 
-    // Random light color using HSV
-    float hue = Random.value;           
-    float saturation = Random.Range(0.3f, 0.6f);
-    float value = Random.Range(0.8f, 1f);       
-    numberBox.color = Color.HSVToRGB(hue, saturation, value);
-}
+        float halfW = numberBox.rectTransform.rect.width / 2;
+        float halfH = numberBox.rectTransform.rect.height / 2;
 
+        float x = Random.Range(spawnArea.rect.xMin + halfW, spawnArea.rect.xMax - halfW);
+        float y = Random.Range(spawnArea.rect.yMin + halfH, spawnArea.rect.yMax - halfH);
+
+        numberBox.rectTransform.anchoredPosition = new Vector2(x, y);
+
+        numberBox.color = Color.HSVToRGB(
+            Random.value,
+            Random.Range(0.3f, 0.6f),
+            Random.Range(0.8f, 1f)
+        );
+    }
 
     IEnumerator ShowCompletePanel()
     {
-        completePanel.SetActive(true); // Activate before animating
-        float elapsed = 0f;
-        Vector3 startScale = Vector3.zero;
-        Vector3 endScale = Vector3.one;
+        completePanel.SetActive(true);
 
-        while (elapsed < panelAnimDuration)
+        float t = 0f;
+        while (t < panelAnimDuration)
         {
-            float t = elapsed / panelAnimDuration;
-            panelCanvasGroup.alpha = Mathf.Lerp(0f, 1f, t);
-            completePanel.transform.localScale = Vector3.Lerp(startScale, endScale, t);
+            t += Time.deltaTime;
+            float p = t / panelAnimDuration;
 
-            elapsed += Time.deltaTime;
+            panelCanvasGroup.alpha = Mathf.Lerp(0, 1, p);
+            completePanel.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, p);
             yield return null;
         }
 
-        panelCanvasGroup.alpha = 1f;
-        completePanel.transform.localScale = endScale;
+        panelCanvasGroup.alpha = 1;
+        completePanel.transform.localScale = Vector3.one;
     }
 
     void UpdateScoreUI()
     {
         scoreText.text = "Score: " + score;
     }
-}
+}   
